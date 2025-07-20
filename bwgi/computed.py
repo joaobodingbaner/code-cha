@@ -1,64 +1,85 @@
-import functools
-import inspect
-
 class computed_property:
     def __init__(self, *dependencies):
         self.dependencies = set(dependencies)
+        self.fget = None
+        self.fset = None
+        self.fdel = None
+        self.__doc__ = None
+        self.attr_name = None
 
     def __call__(self, func):
-        self.func = func
+        self.fget = func
         self.__doc__ = func.__doc__
-
-        attr_name = f'_cached_{func.__name__}'
-        deps_name = f'_deps_{func.__name__}'
-
-        @property
-        @functools.wraps(func)
-        def wrapper(instance):
-            # inicializa armazenamento se necessário
-            if not hasattr(instance, '__computed_cache__'):
-                instance.__computed_cache__ = {}
-                instance.__computed_deps__ = {}
-
-            # pega o cache e os valores anteriores das dependências
-            cache = instance.__computed_cache__
-            prev_deps = instance.__computed_deps__.get(func.__name__, {})
-
-            # captura os valores atuais das dependências
-            current_deps = {
-                dep: getattr(instance, dep, object())
-                for dep in self.dependencies
-            }
-
-            # compara com o estado anterior
-            if func.__name__ in cache and current_deps == prev_deps:
-                return cache[func.__name__]
-
-            # atualiza e computa
-            value = func(instance)
-            cache[func.__name__] = value
-            instance.__computed_deps__[func.__name__] = current_deps
-            return value
-
-        self._prop = wrapper
         return self
 
+    def __set_name__(self, owner, name):
+        self.attr_name = name
+
+        # Atribui docstring na classe para aparecer em help(obj)
+        if self.__doc__ and not hasattr(owner, '__doc_properties__'):
+            owner.__doc_properties__ = {}
+        if self.__doc__:
+            owner.__doc_properties__[name] = self.__doc__
+
+    def __get__(self, instance, owner=None):
+        if instance is None:
+            return self  # acesso via classe
+
+        if not hasattr(instance, '__computed_cache__'):
+            instance.__computed_cache__ = {}
+            instance.__computed_deps__ = {}
+
+        cache = instance.__computed_cache__
+        state = instance.__computed_deps__
+
+        current_deps = {
+            dep: getattr(instance, dep, object())
+            for dep in self.dependencies
+        }
+
+        if self.attr_name in cache and state.get(self.attr_name) == current_deps:
+            return cache[self.attr_name]
+
+        value = self.fget(instance)
+        cache[self.attr_name] = value
+        state[self.attr_name] = current_deps
+        return value
+
+    def __set__(self, instance, value):
+        if self.fset is None:
+            raise AttributeError(f"can't set attribute '{self.attr_name}'")
+        self.fset(instance, value)
+
+    def __delete__(self, instance):
+        if self.fdel is None:
+            raise AttributeError(f"can't delete attribute '{self.attr_name}'")
+        self.fdel(instance)
+
     def setter(self, func):
-        self._prop = self._prop.setter(func)
+        self.fset = func
         return self
 
     def deleter(self, func):
-        self._prop = self._prop.deleter(func)
+        self.fdel = func
         return self
 
-    def __get__(self, instance, owner=None):
-        return self._prop.__get__(instance, owner)
 
-    def __set__(self, instance, value):
-        return self._prop.__set__(instance, value)
+from math import sqrt
 
-    def __delete__(self, instance):
-        return self._prop.__delete__(instance)
+class Vector:
+    def __init__(self, x, y, z, color=None):
+        self.x, self.y, self.z = x, y, z
+        self.color = color
 
-    def __set_name__(self, owner, name):
-        self._prop.__set_name__(owner, name)
+    @computed_property('x', 'y', 'z')
+    def magnitude(self):
+        print('Computing magnitude...')
+        return sqrt(self.x**2 + self.y**2 + self.z**2)
+
+v = Vector(3, 4, 0)
+print(v.magnitude)  # computing...
+print(v.magnitude)  # cache
+v.y = 8
+print(v.magnitude)  # recomputing...
+
+help(Vector)
