@@ -1,10 +1,6 @@
-1) Cenário 
-A empresa quer disponibilizar um banco de dados PostgreSQL para uso em 
-produção. Temos um time pequeno de dados e esse banco não pode ter downtime. 
-Ele será utilizado por colaboradores em São Paulo, Nova York e Londres com alta 
-frequência de leitura e gravação. 
+## Questão 1
 
-1) Resposta
+
 Relacionado a alta frequencia e leitura existe a necessidade de uma base de replica focada em leitura.
 Se existir problemas relacionado a latência (aplicações que necessitam de informações atualizadas rapidamente) será necessário
 uma arquitetura multi region. Soluções Cloud conseguem nos ajudar com isso. Caso seja apenas queries consultivas para usuários físicos
@@ -22,7 +18,46 @@ E evitar usuários compartilhados, caso exista algum usuário ofensor é importa
 
 Releventa manter uma rotina de backup para disaster recovery
 
-4) 
+## Questão 2
+
+![Fro2](images/diagramas-Cenario2.drawio)
+
+Tabela cliente: Tabela para armazenar dados referente ao cliente
+
+Tabela porfolio: Tabela para armzenar dados referente ao porfolio, no caso um portfolio é relacioado a um cliente, sendo que 1 cliente pode ter N portfolios
+
+Tabela transacao: Tabela para armazenar dados referentes a transações, caracterizando o tipo (compra, venda), o volume de determinado ativo naquela transação e o PU no momento da transação. Nesse caso podemos ter transações diferentes para um mesmo porfolio e ativo, caracterizando uma relação 1:N com as tabelas originais de portfolio e ativo
+
+Tabela ativo: Tabela para armazenar dados referentes ao ativo, caracterizado o nome do ativo, código para transações, tipo, o preco atual, moeda de referência. Com chave primária o ativo_id que tem relação 1:n com as tabelas rendimento e porfolio_ativo
+
+Tabela rendimento: Tabela para armazenar dados referentes a quanto um ativo rendeu.
+
+Tabela portfolio_ativo: Tabela para armazenar dados referentes a composição do portfólio, com os pesos porcentuais do ativo dentro da carteira.
+
+## Questão 3
+
+![Fro3](images/diagramas-Cenario3.drawio)
+
+Tabela fato:
+
+fact_vendas: tabela fato com valores numéricos referente a vendas.
+
+Tabelas dimensionais:
+
+dim_funcionarios: tabela dimensional caracterizando os funcionários responsáveis pela venda.
+
+dim_lojas: tabela dimensional caracterizando onde foi realizada a venda.
+
+dim_produtos: tabela dimensional caracterizando os produtos, como se fosse o catálogo, podendo receber adição de mais colunas para caracterizar dimensoes, marca, etc
+
+dim_clientes: tabela dimensional caracterizando os clientes, podendo receber mais colunas importantes importantes para analise, exemplo data de nascimento, se possui cartao de credito cadastrado, sexo, se possui algum beneficio
+
+dim_data: tabela extra adicionada para realizar filtros de datas, especificamente no varejo pode ser relevante adicionar uma coluna extra para categorizar black friday ou eventos da própria empresa.
+
+
+## Questão 4 
+
+![Fro4](images/diagramas-Cenario4.drawio)
 
 A arquitetura proposta segue a ideia de lakehouse, com traços de um arquitetura medallion
 
@@ -40,10 +75,24 @@ Pontos Cloud: Levado em consideracao que a origem é S3, então foi proposta uma
 Pontos extras Storage: Caso os dados sofressem uma rotina de expurgo do da origem, seria interessante termos apenas um storage para sincronizar os dados do ambiente externo para o nosso ambiente, sem nenhuma tratamento, puramente os arquivos. Aqui um AWS DataSync poderia ser utilizado, ou outro framework opensource
 Pontos extra consulta: No mundo real pode existir a necessidade de cruzar mais bases, para essas arquiteturas mais complexas pode existir a necessidade de construir um DW, e talvez outras engines que permitem o cruzamento entre diferentes DW, como um trino (que tambem com opcao entrerprise via startburst)
 
-5) A arquitetura proposta seria semelhante a lambda.
+## Questão 5
+
+![Fro5](images/diagramas-Cenario5.drawio)
+
+A arquitetura proposta seria semelhante a lambda.
+
+Em que os dados de streaming estariam disponíveis em uma camada mais quente, e os dados batch em uma camada mais fria.
+
+https://medium.com/@vinciabhinav7/lambda-architecture-a-big-data-processing-framework-introduction-74a47bc88bd3
 
 Nesse caso a origem dos dados seria um Kafka.
 
-A servin layer (camada com os dados acessados mais )
+1) A camada de streaming para análise de dados Near Real Time poderia ser traduzida para um arquitetura mais simples com um Apache Druid para armazenamento de dados e com um apache SuperSet como ferramenta de visualização. Outras possibilidades poderiam ser usar um Apache Flink, ou um Spark Streaming com micro batchs caso não tenha necessidade de uma latência muito baixa, que realizam appends em um DW ou tabelas iceberg no lake.
 
-https://medium.com/@vinciabhinav7/lambda-architecture-a-big-data-processing-framework-introduction-74a47bc88bd3
+
+2) A camada de batch pode seguir o fluxo proposto no item anterior, já com tratativas de duplicacao, upsert de dados se necessário e afins.
+
+3) para finalmente realizar um join nessa camada de consulta poderia ser utilizado um trino, caso esteja em lugares diferentes, por exemplo.
+
+Nessa estrutura é proposto um modelo de append na camada de streaming para agilizar a escrita, e a etapa de "tratamento" dos dados é realizada via banco de dados por view/consultas. Podendo deixar uma janela de por exemplo 7 dias de dados que é complementada pelo histórico da camada batch.
+
