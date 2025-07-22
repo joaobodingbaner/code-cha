@@ -20,7 +20,7 @@ Releventa manter uma rotina de backup para disaster recovery
 
 ## Questão 2
 
-![Fro2](images/diagramas-Cenario2.drawio)
+![Fro2](images/diagramas-Cenario2.drawio.png)
 
 Tabela cliente: Tabela para armazenar dados referente ao cliente
 
@@ -36,7 +36,7 @@ Tabela portfolio_ativo: Tabela para armazenar dados referentes a composição do
 
 ## Questão 3
 
-![Fro3](images/diagramas-Cenario3.drawio)
+![Fro3](images/diagramas-Cenario3.drawio.png)
 
 Tabela fato:
 
@@ -57,7 +57,7 @@ dim_data: tabela extra adicionada para realizar filtros de datas, especificament
 
 ## Questão 4 
 
-![Fro4](images/diagramas-Cenario4.drawio)
+![Fro4](images/diagramas-Cenario4.drawio.png)
 
 A arquitetura proposta segue a ideia de lakehouse, com traços de um arquitetura medallion
 
@@ -77,7 +77,7 @@ Pontos extra consulta: No mundo real pode existir a necessidade de cruzar mais b
 
 ## Questão 5
 
-![Fro5](bwgi/DE/images/diagramas-Cenario2.drawio.png)
+![Fro5](images/diagramas-Cenario5.drawio.png)
 
 A arquitetura proposta seria semelhante a lambda.
 
