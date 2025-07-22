@@ -77,7 +77,7 @@ Pontos extra consulta: No mundo real pode existir a necessidade de cruzar mais b
 
 ## Questão 5
 
-![Fro5](images/diagramas-Cenario5.drawio)
+![Fro5](bwgi/DE/images/diagramas-Cenario2.drawio.png)
 
 A arquitetura proposta seria semelhante a lambda.
 
