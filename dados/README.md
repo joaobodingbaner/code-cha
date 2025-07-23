@@ -1,3 +1,5 @@
+# Engenharia de Dados 
+
 ## Questão 1
 
 
@@ -95,4 +97,54 @@ Nesse caso a origem dos dados seria um Kafka.
 3) para finalmente realizar um join nessa camada de consulta poderia ser utilizado um trino, caso esteja em lugares diferentes, por exemplo.
 
 Nessa estrutura é proposto um modelo de append na camada de streaming para agilizar a escrita, e a etapa de "tratamento" dos dados é realizada via banco de dados por view/consultas. Podendo deixar uma janela de por exemplo 7 dias de dados que é complementada pelo histórico da camada batch.
+
+# Database Administration
+
+## Questão 1
+
+o BEGIN/END dentro de um PL/pgSQL indica uma função, basicamente para facilitar a organização de um proc que pode ser rodada no banco, mas que não dispara ativamente uma transação no banco.
+Já o BEGIN/END a nível de psql explicita uma transação, sendo necessário commit para finalização da transação, ou um rollback
+
+https://www.postgresql.org/docs/current/tutorial-transactions.html
+
+## Questão 2
+E.
+
+## Questão 3
+D. e E.
+
+Ponto plausível C: Nas versões atuais existe uma lista maior de possíveis índices.
+
+## Questão 4
+B. e C.
+
+
+## Questão 5
+
+```sql
+Select ID, FIRST_NAME, MANAGER_ID, SALARY
+from EMPREGADOS
+where  > (
+    Select max(SALARY)
+    from EMPREGADOS
+    where MANAGER_ID = 100
+)
+order by SALARY
+```
+
+## Questão 6
+
+A. V
+
+B. F
+
+C. F
+
+D. F
+
+E. V
+
+## Questão 7
+
+C. 
 

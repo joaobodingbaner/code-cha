@@ -1,27 +1,35 @@
-class computed_property:
-    def __init__(self, *dependencies):
-        self.dependencies = set(dependencies)
-        self.fget = None
-        self.fset = None
-        self.fdel = None
-        self.__doc__ = None
-        self.attr_name = None
+from typing import Any, Callable, Optional, Type
 
-    def __call__(self, func):
+
+class computed_property:
+    """
+    Propriedade computada com cache baseado em dependências.
+    Recalcula o valor apenas quando os atributos dependentes mudam.
+    """
+
+    def __init__(self, *dependencies: str) -> None:
+        self.dependencies: set[str] = set(dependencies)
+        self.fget: Optional[Callable[[Any], Any]] = None
+        self.fset: Optional[Callable[[Any, Any], None]] = None
+        self.fdel: Optional[Callable[[Any], None]] = None
+        self.__doc__: Optional[str] = None
+        self.attr_name: Optional[str] = None
+
+    def __call__(self, func: Callable[[Any], Any]) -> 'computed_property':
         self.fget = func
         self.__doc__ = func.__doc__
         return self
 
-    def __set_name__(self, owner, name):
+    def __set_name__(self, owner: Type, name: str) -> None:
         self.attr_name = name
 
-        # Atribui docstring na classe para aparecer em help(obj)
-        if self.__doc__ and not hasattr(owner, '__doc_properties__'):
-            owner.__doc_properties__ = {}
+        # Armazena docstring para exibição em help()
         if self.__doc__:
+            if not hasattr(owner, '__doc_properties__'):
+                owner.__doc_properties__ = {}
             owner.__doc_properties__[name] = self.__doc__
 
-    def __get__(self, instance, owner=None):
+    def __get__(self, instance: Any, owner: Optional[Type] = None) -> Any:
         if instance is None:
             return self  # acesso via classe
 
@@ -29,39 +37,42 @@ class computed_property:
             instance.__computed_cache__ = {}
             instance.__computed_deps__ = {}
 
-        cache = instance.__computed_cache__
-        state = instance.__computed_deps__
+        cache: dict[str, Any] = instance.__computed_cache__
+        state: dict[str, dict[str, Any]] = instance.__computed_deps__
 
         current_deps = {
             dep: getattr(instance, dep, object())
             for dep in self.dependencies
         }
 
-        if self.attr_name in cache and state.get(self.attr_name) == current_deps:
+        if (self.attr_name in cache and
+                state.get(self.attr_name) == current_deps):
             return cache[self.attr_name]
 
+        assert self.fget is not None, f"Getter not defined for '{self.attr_name}'"
         value = self.fget(instance)
         cache[self.attr_name] = value
         state[self.attr_name] = current_deps
         return value
 
-    def __set__(self, instance, value):
+    def __set__(self, instance: Any, value: Any) -> None:
         if self.fset is None:
             raise AttributeError(f"can't set attribute '{self.attr_name}'")
         self.fset(instance, value)
 
-    def __delete__(self, instance):
+    def __delete__(self, instance: Any) -> None:
         if self.fdel is None:
             raise AttributeError(f"can't delete attribute '{self.attr_name}'")
         self.fdel(instance)
 
-    def setter(self, func):
+    def setter(self, func: Callable[[Any, Any], None]) -> 'computed_property':
         self.fset = func
         return self
 
-    def deleter(self, func):
+    def deleter(self, func: Callable[[Any], None]) -> 'computed_property':
         self.fdel = func
         return self
+
 
 
 from math import sqrt
