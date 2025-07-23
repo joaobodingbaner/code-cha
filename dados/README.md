@@ -3,7 +3,7 @@
 ## Questão 1
 
 
-Relacionado a alta frequencia e leitura existe a necessidade de uma base de replica focada em leitura.
+Relacionado a alta frequência e leitura existe a necessidade de uma base de réplica focada em leitura.
 Se existir problemas relacionado a latência (aplicações que necessitam de informações atualizadas rapidamente) será necessário
 uma arquitetura multi region. Soluções Cloud conseguem nos ajudar com isso. Caso seja apenas queries consultivas para usuários físicos
 provavelmente não há necessidade por conta da latência. Mas por se tratar de um banco crítico é interessante realizar um deploy multi region
@@ -14,11 +14,11 @@ https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-global-datab
 https://docs.aws.amazon.com/AmazonRDS/latest/AuroraPostgreSQLReleaseNotes/AuroraPostgreSQL.Updates.html
 
 
-É importante também ter monitoramentos a nível de recurso computacional, principalmente storage e CPU
-Além de uma monitoria de queries que podem estar travando o base, monitorar o número de conexões ativas também é importante
+É importante também ter monitoramentos a nível de recurso computacional, principalmente storage e CPU.
+Além de uma monitoria de queries que podem estar travando o base, monitorar o número de conexões ativas também é importante.
 E evitar usuários compartilhados, caso exista algum usuário ofensor é importante isolar o problema rapidamente e não impactar demais usuários/aplicações
 
-Releventa manter uma rotina de backup para disaster recovery
+Relevente manter uma rotina de vacuum.
 
 ## Questão 2
 
@@ -26,11 +26,11 @@ Releventa manter uma rotina de backup para disaster recovery
 
 Tabela cliente: Tabela para armazenar dados referente ao cliente
 
-Tabela porfolio: Tabela para armzenar dados referente ao porfolio, no caso um portfolio é relacioado a um cliente, sendo que 1 cliente pode ter N portfolios
+Tabela portfólio: Tabela para armazenar dados referente ao porfólio, no caso um portfólio é relacioado a um cliente, sendo que 1 cliente pode ter N portfólios
 
-Tabela transacao: Tabela para armazenar dados referentes a transações, caracterizando o tipo (compra, venda), o volume de determinado ativo naquela transação e o PU no momento da transação. Nesse caso podemos ter transações diferentes para um mesmo porfolio e ativo, caracterizando uma relação 1:N com as tabelas originais de portfolio e ativo
+Tabela transacao: Tabela para armazenar dados referentes a transações, caracterizando o tipo (compra, venda), o volume de determinado ativo naquela transação e o PU no momento da transação. Nesse caso podemos ter transações diferentes para um mesmo porfólio e ativo, caracterizando uma relação 1:N com as tabelas originais de portfólio e ativo
 
-Tabela ativo: Tabela para armazenar dados referentes ao ativo, caracterizado o nome do ativo, código para transações, tipo, o preco atual, moeda de referência. Com chave primária o ativo_id que tem relação 1:n com as tabelas rendimento e porfolio_ativo
+Tabela ativo: Tabela para armazenar dados referentes ao ativo, caracterizado o nome do ativo, código para transações, tipo, o preço atual, moeda de referência. Com chave primária o ativo_id que tem relação 1:n com as tabelas rendimento e porfolio_ativo
 
 Tabela rendimento: Tabela para armazenar dados referentes a quanto um ativo rendeu.
 
@@ -92,9 +92,9 @@ Nesse caso a origem dos dados seria um Kafka.
 1) A camada de streaming para análise de dados Near Real Time poderia ser traduzida para um arquitetura mais simples com um Apache Druid para armazenamento de dados e com um apache SuperSet como ferramenta de visualização. Outras possibilidades poderiam ser usar um Apache Flink, ou um Spark Streaming com micro batchs caso não tenha necessidade de uma latência muito baixa, que realizam appends em um DW ou tabelas iceberg no lake.
 
 
-2) A camada de batch pode seguir o fluxo proposto no item anterior, já com tratativas de duplicacao, upsert de dados se necessário e afins.
+2) A camada de batch pode seguir o fluxo proposto no item anterior, já com tratativas de deduplicação, upsert de dados se necessário e afins.
 
-3) para finalmente realizar um join nessa camada de consulta poderia ser utilizado um trino, caso esteja em lugares diferentes, por exemplo.
+3) para finalmente realizar um join nessa camada de consulta poderia ser utilizado um trino, caso esteja disponíveis em diferentes DW.
 
 Nessa estrutura é proposto um modelo de append na camada de streaming para agilizar a escrita, e a etapa de "tratamento" dos dados é realizada via banco de dados por view/consultas. Podendo deixar uma janela de por exemplo 7 dias de dados que é complementada pelo histórico da camada batch.
 
